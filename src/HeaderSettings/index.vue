@@ -1,6 +1,6 @@
 <template>
   <div class="btn-group" name="HeaderSettings">
-    <button class="btn btn-default dropdown-toggle" ref="dropdownBtn">
+    <button class="btn btn-default dropdown-toggle" ref="dropdownBtn" @click="toggle">
       <i class="fa" :class="[usingBak && 'text-info', processingCls || 'fa-cog']"></i>
       <span class="caret"></span>
     </button>
@@ -82,12 +82,7 @@ export default {
     this.usingBak = true
   },
   mounted () {
-    // control dropdown manually (refers to http://jsfiddle.net/rj3k550m/3)
-    const $el = $(this.$el)
-    $(this.$refs.dropdownBtn).on('click', this.toggle)
-    $(document).on('click', e => {
-      $(e.target).closest($el).length || $el.removeClass('open')
-    })
+    document.addEventListener('click', this.globalClick);
   },
   computed: {
     colGroups () {
@@ -120,11 +115,11 @@ export default {
       rmFromLS(this.storageKey)
       this.showProcessing()
       this.usingBak = false
-      
+
       replaceWith(this.columns, parseStr(this.origSettings)) // restore
     },
     toggle () {
-      $(this.$el).toggleClass('open')
+      this.el.classList.toggle('open')
     },
     showProcessing () {
       ['fa-spinner fa-pulse', 'fa-check', ''].forEach((cls, idx) => {
@@ -132,6 +127,9 @@ export default {
           this.processingCls = cls
         }, idx * 1000)
       })
+    },
+    globalClick(e){
+      ~e.path.indexOf(this.$el) || this.$el.classList.remove('open');
     }
   }
 }

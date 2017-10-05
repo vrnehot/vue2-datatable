@@ -9,33 +9,32 @@ import debounce from 'lodash/debounce'
  */
 export default function (els, callback) {
   let currentDriver
-  
-  function syncScroll(me, others) {
-    me
-      .on('scroll', throttle(() => {
-        if (currentDriver && currentDriver !== me) return
-        currentDriver = me
 
-        let offsetLeft = me.scrollLeft()
-        others.scrollLeft(offsetLeft)
-        
-        callback(offsetLeft)
-      }))
-      // scroll stops
-      .on('scroll', debounce(() => {
-        currentDriver = null
-      }, 150))
+  function syncScroll(me, others) {
+    let tHandler = throttle(() => {
+      if (currentDriver && currentDriver !== me) return
+      currentDriver = me
+      let offsetLeft = me.scrollLeft
+      others.scrollLeft = offsetLeft;
+      callback(offsetLeft);
+    });
+    let dHandler = debounce(() => {
+      currentDriver = null
+    }, 150);
+    me.addEventListener('scroll', tHandler);
+    me.addEventListener('scroll', dHandler);
 
     // unlistener
     return () => {
-      me.off('scroll')
+      me.removeEventListener('scroll', tHandler);
+      me.removeEventListener('scroll', dHandler);
     }
   }
-  
+
   const unlisteners = els.map((me, idx) => {
     let others = els.slice()
     others.splice(idx, 1) // exclude me
-    return syncScroll($(me), $(others))
+    return syncScroll(me, others)
   })
 
   // unsync
